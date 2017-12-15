@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="custom_rules" default="deploy" >
+<property environment="SystemVariable" />
+ <taskdef name="ChannelDeleteTask" classname="com.wawa.tools.DeleteChannleFile">
+	       <classpath>
+            <pathelement location="${SystemVariable.ANT_HOME}/lib/WawaAntTools.jar"/>
+        </classpath>
+ </taskdef>
+		
+<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+        <classpath>
+            <pathelement location="${SystemVariable.ANT_HOME}/lib/ant-contrib-1.0b3.jar"/>
+        </classpath>
+ </taskdef>
+<taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" >
+        <classpath>
+            <pathelement location="${SystemVariable.ANT_HOME}/lib/ant-contrib-1.0b3.jar"/>
+        </classpath>
+</taskdef>
+<!--     声明ant loop ，这里直接用ant的循环功能，批处理什么的又要多写代码，而且我也不熟 -->
+<!-- 这里相当于一个方法把，(表示ant不会，只能看懂＝ ＝) ，以后可以用命令行 ant deploy 来表示批量打包 -->
+<!-- ${market_channels} 要在local.properties里声明，并用,来分隔你要打包的channel名 -->
+<!-- 比如我的local.properties里是这样写的   market_channels=Google,Gfan,AnZhi,MuMayi -->
+      <property file="market_channel.properties"/>
+    <target name="deploy" >
+          <foreach  target="channel_package" list="${market_channels}" param="channel" delimiter=","/>
+    </target>
+     <target name="channel_package">
+     <tstamp>
+          <format property="TODAY_UK" pattern="yyyyMMddHHmmss"  locale="cn,CN"/>
+          <format property="TODAY_DAY" pattern="yyyyMMdd"  locale="cn,CN"/>
+          </tstamp>
+    <property name="apk.dir" value="F:\\平台打包\\${TODAY_DAY}"/>
+     <mkdir dir="${apk.dir}"/>
+     <!--if the target channel's keystore file is not exist,then create one -->
+   <!--  <available file="gamepig_${channel}.keystore" filepath="E:\\GamePig\\gameTools\\keys" property="keystore_exist">
+     </available>
+     <condition property="scondition">
+     <isset property="keystore_exist"/>
+     </condition>
+     <echo message="gamepig_${channel}.keystore not set"/>
+     <exec executable="cmd.exe" failonerror="false">
+     <arg value="/c" />
+    <arg value="keytool" />
+     <arg value="-genkey"/>
+     <arg value="-alias"/>
+     <arg value="${channel}"/>
+     <arg value="-keypass"/>
+     <arg value="111111"/>
+     <arg value="-keyalg"/>
+     <arg value="RSA"/>
+     <arg value="-keysize"/>
+     <arg value="1024"/>
+     <arg value="-validity"/>
+     <arg value="36500"/>
+     <arg value="-keystore"/>
+     <arg value="E:\\GamePig\\gameTools\\keys/gamepig_${channel}.keystore"/>
+     <arg value="-storepass"/>
+     <arg value="111111"/>
+     <arg value="-dname"/>
+     <arg value="CN=mobilefish,OU=mobilefish,O=mobilefishstudio,L=CD,ST=SC,C=CN"/>
+  </exec>
+  -->
+     <antcall target="icon_patch"/>
+	 <antcall target="delOtherChannels"/>
+    <antcall target="truely_build"/> 
+     </target>
+	 <target name="delOtherChannels">
+		<foreach  target="deleteOtherChannel" list="${all_market_channels}" param="channel2" delimiter=","/>
+	 </target>
+	 <target name="deleteOtherChannel">
+		<condition property="isOtherChannel">  
+            <equals arg1="${channel}" arg2="${channel2}"/>  
+        </condition> 
+		<antcall target="tisOtherChannel"/>  	
+     </target>
+	 
+	 <target name="tisOtherChannel" unless="isOtherChannel">
+		<ChannelDeleteTask rootDir="." channelDir="./Resources_Config/${channel2}/" />
+     </target>
+     <target name="icon_patch">
+     <condition property="buildexists">
+            <available file="Resources_Config/${channel}/" type="dir"></available>
+     </condition>
+     <echo message="${buildexists}"/>
+     <antcall target="file_here"/>
+     </target>
+     <target name="file_here" if="buildexists">
+     <copy todir="./" overwrite="true">
+		<fileset dir="./Resources_Config/${channel}/"/>
+     </copy>
+		
+     </target>
+     <target name="truely_build">
+     <xmlproperty file="AndroidManifest.xml"/>
+     <property name="channel_apk" value="theway_${channel}_v${manifest(android:versionName)}_${TODAY_UK}"/>
+     <property file="ant.properties"/>
+     <property name="key.store.password" value="${key.store.password}"/>
+     <property name="key.alias.password" value="${key.alias.password}"/>
+     <property name="temp.key.store" value="${key.store}"/>
+     <property name="temp.key.alias" value="${key.alias}"/>
+	 <!--
+     <propertyregex property="key.store" input="${temp.key.store}" regexp='freepay' replace="${channel}"/>
+     <propertyregex property="key.alias" input="${temp.key.alias}" regexp='freepay' replace="${channel}"/>
+	 -->
+     <echo message="${channel}"/>
+     <echo message="${channel_apk}"/>
+     <echo message="key.store:${key.store}"/>
+     <echo message="key.store.pass:${key.store.password}"/>
+     <echo message="key.alias:${key.alias}"/>
+     <echo message="key.alias.password:${key.alias.password}"/>
+     <replaceregexp flags="g" byline="false">
+        <!-- 匹配的内容是 android:value="*****" android:name="UMENG_CHANNEL" -->
+        <regexp pattern='android:name="UMENG_CHANNEL" android:value="(.*)"' />
+        <!-- 匹配之后将其替换为 android:value="渠道名" android:name="UMENG_CHANNEL" -->
+        <substitution expression='android:name="UMENG_CHANNEL" android:value="${channel}"' />
+        <!-- 正则表达式需要匹配的文件为AndroidManifest.xml -->
+         <fileset dir="" includes="AndroidManifest.xml" />
+    </replaceregexp>
+
+     <property
+            name="out.final.file"
+            location="${apk.dir}/${channel_apk}.apk" />
+      <antcall target="clean" />
+       <antcall target="release" />
+     </target>
+</project>

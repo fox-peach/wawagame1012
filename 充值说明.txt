@@ -1,0 +1,7 @@
+支付宝：无需调整直接可以调出界面（有客户端直接拉起客户端，无客户端直接拉起网页版）
+现在支付：需要把Theway\frameworks\runtime-src\proj.android\resource\IpayNow\libs\armeabi里面的so文件放入
+			    Theway\frameworks\runtime-src\proj.android\libs\armeabi该目录（需要安装微信客户端，如无微信会弹出一个提醒）
+银联支付：需要把Theway\frameworks\runtime-src\proj.android\resource\UnionPay\libs\armeabi里面的so文件放入
+				Theway\frameworks\runtime-src\proj.android\libs\armeabi该目录
+			  把Theway\frameworks\runtime-src\proj.android\resource\UnionPay\libs\assets里面的UPPayPluginEx.apk文件放入
+				Theway\frameworks\runtime-src\proj.android\libs\assets该目录 

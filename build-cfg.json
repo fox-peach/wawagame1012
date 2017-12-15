@@ -1,0 +1,17 @@
+{
+    "ndk_module_path" :[
+        "../cocos2d",
+        "../cocos2d/cocos",
+        "../cocos2d/external"
+    ],
+    "copy_resources": [
+        {
+            "from": "../../../res",
+            "to": "res"
+        },
+		 {
+            "from": "../../../src",
+            "to": "src"
+        }
+    ]
+}
